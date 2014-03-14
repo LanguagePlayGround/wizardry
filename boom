@@ -1,0 +1,92 @@
+#!/bin/bash
+if hash rvm 2>/dev/null; then
+  echo "Removing RVM"
+  sudo rvm implode
+  rm -rf ~/.rvm
+else
+  echo "RVM is not installed. Moving on..."
+fi
+
+if hash port 2>/dev/null; then
+  echo "Removing MacPorts"
+  sudo port -fp uninstall installed
+  sudo rm -rf \
+    /opt/local \
+    /Applications/DarwinPorts \
+    /Applications/MacPorts \
+    /Library/LaunchDaemons/org.macports.* \
+    /Library/Receipts/DarwinPorts*.pkg \
+    /Library/Receipts/MacPorts*.pkg \
+    /Library/StartupItems/DarwinPortsStartup \
+    /Library/Tcl/darwinports1.0 \
+    /Library/Tcl/macports1.0 \
+    ~/.macports
+else
+  echo "Macports is not installed. Moving on..."
+fi
+
+if [ ! -d ~/.oh-my-zsh ]; then
+  echo "Installing Oh My Zsh"
+  sudo curl -L http://install.ohmyz.sh | sh
+  chsh -s /bin/zsh
+fi
+
+
+if [ ! brew ]; then
+  echo "Setting ownership of /usr/local"
+  sudo chown -R $USER /usr/local
+  echo "Installing homebrew"
+  ruby -e "$(curl -fsSL https://raw.github.com/Homebrew/homebrew/go/install)"
+  brew update
+  sudo chown -R $USER /Library/Caches/Homebrew/
+fi
+
+for pkg in chruby ruby-install; do
+  if brew list -1 | grep -q "%${pkg}\$"; then
+    echo "You already have '$pkg'. Moving on"
+  else
+    echo "Installing '$pkg'"
+    brew install $pkg
+  fi
+done
+
+echo "Installing Ruby 2.0"
+ruby-install ruby 2.0
+
+echo "Set default version of Ruby to 2.0"
+touch ~/.ruby-version
+echo "ruby-2.0" >> ~/.ruby-version
+
+if ! grep -Fxq "source /usr/local/share/chruby/chruby.sh" ~/.zshrc; then
+  echo "source /usr/local/share/chruby/chruby.sh" >> ~/.zshrc
+  echo "source /usr/local/share/chruby/auto.sh" >> ~/.zshrc
+fi
+
+if [ ! -f ~/.gemrc ]; then
+  touch ~/.gemrc
+fi
+
+if ! grep -Fxq "gem: --no-rdoc --no-ri" ~/.gemrc; then
+  echo "gem: --no-rdoc --no-ri" >> ~/.gemrc
+fi
+
+source ~/.zshrc
+chruby 2.0
+
+echo "Installing essential gems"
+echo "Installing Pry"
+gem install pry
+echo "Installing Rails"
+gem install rails
+echo "Installing Sinatra"
+gem install sinatra
+echo "Installing RSpec"
+gem install rspec
+echo "Installing Rubygems Bundler"
+gem install rubygems-bundler
+gem regenerate_binstubs
+
+echo "Changing shell to zsh."
+echo "All good. Have a wonderful day"
+zsh
+
