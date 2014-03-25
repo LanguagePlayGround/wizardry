@@ -53,8 +53,7 @@ done
 echo "Installing Ruby 2.0"
 ruby-install ruby 2.0
 
-echo "Set default version of Ruby to 2.0"
-touch ~/.ruby-version
+echo "Setting default version of Ruby to 2.0"
 echo "ruby-2.0" >> ~/.ruby-version
 
 if ! grep -Fxq "source /usr/local/share/chruby/chruby.sh" ~/.zshrc; then
@@ -89,4 +88,3 @@ gem regenerate_binstubs
 echo "Changing shell to zsh."
 echo "All good. Have a wonderful day"
 zsh
-
